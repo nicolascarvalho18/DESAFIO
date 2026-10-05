@@ -1,0 +1,17 @@
+server:
+  port: 8080
+spring:
+  profiles:
+    default: dev
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus,metrics
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html

@@ -1,0 +1,8 @@
+backend/target/
+backend/data/*.mv.db
+backend/data/*.trace.db
+.local-logs/
+*.log
+.env
+.env.*
+!.env.example

@@ -1,0 +1,67 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1720" height="1080" viewBox="0 0 1720 1080" role="img" aria-labelledby="title desc">
+<title id="title">Modelagem da arquitetura da API de pagamentos</title><desc id="desc">Arquitetura em camadas com API, serviço transacional, PostgreSQL e padrão outbox com RabbitMQ na produção; faixa inferior mostra as substituições do perfil de desenvolvimento.</desc>
+<defs>
+ <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#f5f8fc"/><stop offset="1" stop-color="#eaf0f7"/></linearGradient>
+ <filter id="shadow" x="-15%" y="-15%" width="130%" height="140%"><feDropShadow dx="0" dy="5" stdDeviation="8" flood-color="#10233d" flood-opacity=".10"/></filter>
+ <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#637891"/></marker>
+ <marker id="arrowGreen" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" fill="#16836d"/></marker>
+ <style>text{font-family:Inter,'Segoe UI',Arial,sans-serif;fill:#182a40}.title{font-size:37px;font-weight:750;letter-spacing:-.8px}.subtitle{font-size:16px;fill:#63758a}.section{font-size:12px;font-weight:750;letter-spacing:1.5px;fill:#74869a}.head{font-size:18px;font-weight:700}.copy{font-size:13px;fill:#5d7086}.small{font-size:11px;fill:#65788d}.tag{font-size:11px;font-weight:700;letter-spacing:.4px}.flow{stroke:#71859a;stroke-width:2.4;fill:none;marker-end:url(#arrow)}.flowGreen{stroke:#16836d;stroke-width:2.7;fill:none;marker-end:url(#arrowGreen)}.dash{stroke-dasharray:7 7}</style>
+</defs>
+<rect width="1720" height="1080" rx="24" fill="url(#bg)"/>
+<text x="72" y="82" class="section">PAGAMENTOS · MODELAGEM DO SISTEMA</text><text x="72" y="132" class="title">Arquitetura da API de idempotência</text><text x="72" y="164" class="subtitle">Monólito em camadas; eventos assíncronos com Outbox e RabbitMQ no perfil de produção.</text>
+<text x="72" y="220" class="section">FLUXO DE PRODUÇÃO</text>
+<!-- cards -->
+<g filter="url(#shadow)"><rect x="72" y="258" width="250" height="245" rx="16" fill="#fff" stroke="#d8e1eb"/></g>
+<rect x="72" y="258" width="250" height="8" rx="4" fill="#5573a5"/>
+<text x="96" y="300" class="tag" fill="#5573a5">ENTRADA</text><text x="96" y="334" class="head">Cliente / Swagger</text>
+<text x="96" y="371" class="copy">• POST /api/v1/auth/login</text><text x="96" y="396" class="copy">• POST /api/v1/payments</text><text x="96" y="421" class="copy">• GET histórico paginado / ID / chave</text>
+<rect x="95" y="448" width="204" height="32" rx="8" fill="#edf2fb"/><text x="109" y="469" class="small">JWT + Idempotency-Key</text>
+
+<g filter="url(#shadow)"><rect x="385" y="258" width="280" height="245" rx="16" fill="#fff" stroke="#d8e1eb"/></g>
+<rect x="385" y="258" width="280" height="8" rx="4" fill="#6d63a6"/>
+<text x="409" y="300" class="tag" fill="#6d63a6">CAMADA WEB</text><text x="409" y="334" class="head">AuthController</text><text x="409" y="357" class="copy">Login, Argon2id e emissão JWT</text>
+<line x1="409" y1="377" x2="641" y2="377" stroke="#e7ebf1"/>
+<text x="409" y="407" class="head">PaymentController</text><text x="409" y="431" class="copy">Autentica e valida a chave (8–128)</text><text x="409" y="462" class="small">O cliente só consulta seus pagamentos</text>
+
+<g filter="url(#shadow)"><rect x="728" y="258" width="320" height="245" rx="16" fill="#fff" stroke="#d8e1eb"/></g>
+<rect x="728" y="258" width="320" height="8" rx="4" fill="#17836e"/>
+<text x="752" y="300" class="tag" fill="#17836e">DOMÍNIO · @Transactional</text><text x="752" y="334" class="head">PaymentService</text>
+<text x="752" y="371" class="copy">1. Normaliza e calcula SHA-256</text><text x="752" y="397" class="copy">2. Procura (cliente, chave)</text><text x="752" y="423" class="copy">3. Cria pagamento uma vez</text><text x="752" y="449" class="copy">4. Persiste evento Outbox junto</text>
+<rect x="752" y="464" width="272" height="25" rx="7" fill="#e9f5f1"/><text x="765" y="481" class="small" fill="#176c5b">Mesmo corpo: replay · outro: 409</text>
+
+<g filter="url(#shadow)"><rect x="1110" y="258" width="250" height="245" rx="16" fill="#fff" stroke="#d8e1eb"/></g>
+<rect x="1110" y="258" width="250" height="8" rx="4" fill="#316b9c"/>
+<text x="1134" y="300" class="tag" fill="#316b9c">PERSISTÊNCIA</text><text x="1134" y="334" class="head">PostgreSQL</text>
+<text x="1134" y="371" class="copy">payments</text><text x="1134" y="396" class="copy">UNIQUE (client_id, key)</text><text x="1134" y="421" class="copy">request_hash + estado</text><text x="1134" y="446" class="copy">outbox_events</text>
+<rect x="1134" y="463" width="201" height="26" rx="7" fill="#eaf2f8"/><text x="1147" y="481" class="small">Invariante decidida no DB</text>
+
+<g filter="url(#shadow)"><rect x="1425" y="258" width="220" height="245" rx="16" fill="#fff" stroke="#d8e1eb"/></g>
+<rect x="1425" y="258" width="220" height="8" rx="4" fill="#d18b37"/>
+<text x="1449" y="300" class="tag" fill="#a86c25">MENSAGERIA</text><text x="1449" y="334" class="head">RabbitMQ</text>
+<text x="1449" y="371" class="copy">Exchange durável</text><text x="1449" y="396" class="copy">payments.process</text><text x="1449" y="421" class="copy">Confirmação do publisher</text><text x="1449" y="446" class="copy">DLQ para rejeitados</text>
+<rect x="1449" y="463" width="171" height="26" rx="7" fill="#fbf2e5"/><text x="1462" y="481" class="small">Entrega at-least-once</text>
+
+<!-- connectors -->
+<path d="M322 380 H375" class="flow"/><path d="M665 380 H718" class="flow"/><path d="M1048 380 H1100" class="flowGreen"/><path d="M1360 380 H1415" class="flow"/>
+<text x="334" y="365" class="small">HTTP</text><text x="674" y="365" class="small">use case</text><text x="1052" y="365" class="small">transação</text>
+
+<!-- async row -->
+<text x="72" y="560" class="section">PROCESSAMENTO ASSÍNCRONO E RECUPERAÇÃO</text>
+<g filter="url(#shadow)"><rect x="340" y="594" width="310" height="146" rx="14" fill="#fff" stroke="#d8e1eb"/></g>
+<text x="366" y="633" class="tag" fill="#17836e">OUTBOX PUBLISHER</text><text x="366" y="665" class="head">Publica eventos pendentes</text><text x="366" y="695" class="copy">Marca published_at só após confirmação.</text><text x="366" y="718" class="small">Falha? O evento permanece e pode ser tentado novamente.</text>
+<g filter="url(#shadow)"><rect x="720" y="594" width="300" height="146" rx="14" fill="#fff" stroke="#d8e1eb"/></g>
+<text x="746" y="633" class="tag" fill="#a86c25">CONSUMER</text><text x="746" y="665" class="head">Deduplica e processa</text><text x="746" y="695" class="copy">processed_messages: message_id único</text><text x="746" y="718" class="small">gateway_charges: gateway_key único</text>
+<g filter="url(#shadow)"><rect x="1090" y="594" width="330" height="146" rx="14" fill="#fff" stroke="#d8e1eb"/></g>
+<text x="1116" y="633" class="tag" fill="#316b9c">ESTADO DO PAGAMENTO</text><text x="1116" y="665" class="head">PENDING → APPROVED / DECLINED</text><text x="1116" y="695" class="copy">Atualização ocorre de forma idempotente.</text><text x="1116" y="718" class="small">O cliente consulta o mesmo ID após retry.</text>
+<path d="M1535 503 V554 H495 V584" class="flowGreen"/><path d="M650 667 H710" class="flowGreen"/><path d="M1020 667 H1080" class="flowGreen"/>
+<path d="M1134 477 C1000 535 860 535 860 584" class="flow dash"/>
+
+<!-- dev band -->
+<rect x="72" y="805" width="1573" height="197" rx="18" fill="#16283d"/>
+<text x="104" y="850" class="tag" fill="#a8c5ec">PERFIL dev · EXECUÇÃO SEM DOCKER</text><text x="104" y="887" font-size="24" font-weight="700" fill="#fff">Demonstra o contrato; não substitui as garantias distribuídas de produção.</text>
+<rect x="104" y="914" width="435" height="58" rx="10" fill="#223952"/><text x="124" y="939" font-size="14" font-weight="700" fill="#fff">H2 persistente em arquivo</text><text x="124" y="958" font-size="11" fill="#bdcce0">Lock transacional local para requests concorrentes</text>
+<rect x="564" y="914" width="475" height="58" rx="10" fill="#223952"/><text x="584" y="939" font-size="14" font-weight="700" fill="#fff">Dispatcher local em memória</text><text x="584" y="958" font-size="11" fill="#bdcce0">Simula o processamento sem broker RabbitMQ</text>
+<rect x="1064" y="914" width="548" height="58" rx="10" fill="#223952"/><text x="1084" y="939" font-size="14" font-weight="700" fill="#fff">Produção = PostgreSQL + RabbitMQ</text><text x="1084" y="958" font-size="11" fill="#bdcce0">Validar com esses serviços antes de alegar garantias reais</text>
+<text x="72" y="1042" class="small">Arquitetura: monólito em camadas + processamento orientado a eventos via Outbox.</text>
+</svg>
+
